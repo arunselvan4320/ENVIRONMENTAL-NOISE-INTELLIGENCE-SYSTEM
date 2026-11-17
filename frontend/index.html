@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#300A6E">
+  <meta name="description" content="Kaanam is a simple dashboard for environmental noise: current levels, a short forecast, and sound labels. Audio you upload is not saved.">
+  <title>Kaanam — Environmental Noise Intelligence</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23300A6E'/%3E%3Cpath d='M7 16c0-6 4-10 9-10' fill='none' stroke='%230B00CF' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M7 16c0 6 4 10 9 10' fill='none' stroke='%230B00CF' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M15 16h2l1.6-3.5 2.2 6 2-4.2 2.2 2.2L27 9' fill='none' stroke='%23FF2D2B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <p class="privacy" style="margin:0;padding:8px 16px">The sensor console is at <a href="http://127.0.0.1:3000">127.0.0.1:3000</a>. This page is the server view.</p>
+
+  <aside class="sidebar">
+    <a class="brand" href="#overview">
+      <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="Kaanam">
+        <path d="M7 16c0-6 4-10 9-10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"/>
+        <path d="M7 16c0 6 4 10 9 10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"/>
+        <path d="M15 16h2l1.6-3.5 2.2 6 2-4.2 2.2 2.2L27 9" fill="none" stroke="#FF2D2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"/>
+      </svg>
+      <span class="brand-text">Kaanam <small lang="ta">கானம்</small></span>
+    </a>
+
+    <div class="workspace">
+      <span class="workspace-icon" aria-hidden="true">◈</span>
+      <div id="workspace-label">Practice walk<small>Example readings, not real measurements</small></div>
+    </div>
+
+    <div class="nav-label">Walk</div>
+    <nav aria-label="Pages">
+      <button type="button" data-page="overview" class="active" aria-current="page"><span aria-hidden="true">01</span>Overview</button>
+      <button type="button" data-page="forecast"><span aria-hidden="true">02</span>Forecast</button>
+      <button type="button" data-page="audio"><span aria-hidden="true">03</span>Sound lab</button>
+      <button type="button" data-page="devices"><span aria-hidden="true">04</span>Sensors</button>
+      <button type="button" data-page="alerts"><span aria-hidden="true">05</span>Alerts <b class="alert-count">0</b></button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="privacy">
+        <i></i> Audio you upload is not saved.
+        <small>It is analysed in memory, then discarded.</small>
+      </div>
+      <a href="/docs" target="_blank" rel="noopener">API documentation</a>
+      <button type="button" id="auth-btn">Admin access</button>
+      <div class="profile">
+        <span>AK</span>
+        <div>Arunkumar<small>Environmental noise project</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <header class="topbar">
+      <a class="top-brand" href="#overview">
+        <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="Kaanam">
+          <path d="M7 16c0-6 4-10 9-10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"/>
+          <path d="M7 16c0 6 4 10 9 10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"/>
+          <path d="M15 16h2l1.6-3.5 2.2 6 2-4.2 2.2 2.2L27 9" fill="none" stroke="#FF2D2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"/>
+        </svg>
+        <span class="brand-text">Kaanam <small lang="ta">கானம்</small></span>
+      </a>
+      <div class="crumb-wrap">
+        <span class="breadcrumb">Walk</span>
+        <span class="slash">/</span>
+        <span id="breadcrumb">Overview</span>
+      </div>
+      <div class="top-right">
+        <span id="connection" class="connection" role="status"><i aria-hidden="true"></i><span id="connection-label">Connecting</span></span>
+        <span id="date-label"></span>
+        <button type="button" class="button ghost" id="auth-btn-mobile">Admin</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow" id="page-eyebrow">Start here</div>
+          <h1 id="page-title">What your sensors are hearing<span>.</span></h1>
+          <p id="page-description">See the current level, the average, and the highest point for the time you picked.</p>
+        </div>
+        <button type="button" class="button secondary" id="export-btn">Download CSV</button>
+      </section>
+
+      <div class="demo-banner">
+        <span class="banner-symbol" aria-hidden="true">◈</span>
+        <div id="mode-note">
+          <b>Practice data</b>
+          <span>These readings are examples so you can explore. They are not real measurements.</span>
+        </div>
+        <button type="button" class="button" id="tick-btn">Add a practice reading</button>
+      </div>
+
+      <div class="filters">
+        <div class="segmented" role="group" aria-label="Which readings to show">
+          <button type="button" data-source="demo" class="selected" aria-pressed="true">Practice data</button>
+          <button type="button" data-source="live" aria-pressed="false">Live sensors</button>
+        </div>
+        <label class="filter-label">Sensor
+          <select id="device-filter" aria-label="Sensor">
+            <option value="all">All sensors</option>
+          </select>
+        </label>
+        <label class="filter-label">Time
+          <select id="hours-filter" aria-label="Time range">
+            <option value="1">Last hour</option>
+            <option value="6" selected>Last 6 hours</option>
+            <option value="24">Last 24 hours</option>
+            <option value="168">Last 7 days</option>
+          </select>
+        </label>
+        <span class="refresh-note">Refreshes every 10 seconds</span>
+      </div>
+
+      <section id="page-overview" class="page active">
+        <div class="metrics">
+          <article class="metric">
+            <div>Current level <span aria-hidden="true">↗</span></div>
+            <h2 id="metric-current">—</h2>
+            <p><i class="mint"></i> Latest minute · not decibels</p>
+            <div class="mini-bars mint-bars"></div>
+          </article>
+          <article class="metric">
+            <div>Average <span aria-hidden="true">⌁</span></div>
+            <h2 id="metric-mean">—</h2>
+            <p>Valid readings only</p>
+            <div class="mini-bars blue-bars"></div>
+          </article>
+          <article class="metric">
+            <div>Highest <span aria-hidden="true">↑</span></div>
+            <h2 id="metric-peak">—</h2>
+            <p>Highest valid reading</p>
+            <div class="mini-bars amber-bars"></div>
+          </article>
+          <article class="metric">
+            <div>Over the alert line <span aria-hidden="true">◉</span></div>
+            <h2 id="metric-exceed">—</h2>
+            <p id="metric-samples">Waiting for readings</p>
+            <div class="metric-foot">You can change the line under Alerts</div>
+          </article>
+        </div>
+
+        <div class="overview-grid">
+          <article class="panel trend-panel">
+            <div class="panel-heading">
+              <div>
+                <h3>Sound level over time</h3>
+                <p>One-minute average for the sensors you selected</p>
+              </div>
+              <span class="pill"><i></i> <span id="chart-source">Practice data</span></span>
+            </div>
+            <div class="chart-legend">
+              <span><i class="mint"></i> Level</span>
+              <span><i class="dashed"></i> Alert line</span>
+              <small>0 to 1</small>
+            </div>
+            <div id="trend-chart" class="trend-chart"></div>
+            <div class="panel-footer">
+              <span id="quality-note">Quality checks on</span>
+              <span>Times shown in UTC</span>
+            </div>
+          </article>
+
+          <article class="panel source-panel">
+            <div class="panel-heading">
+              <div>
+                <h3>What the labels say</h3>
+                <p id="class-note">Example labels</p>
+              </div>
+            </div>
+            <div class="donut-wrap">
+              <svg viewBox="0 0 180 180" id="donut" role="img" aria-label="Share of sound labels"></svg>
+              <div class="donut-centre">
+                <strong id="source-total">—</strong>
+                <span>readings</span>
+              </div>
+            </div>
+            <div id="source-legend" class="source-legend"></div>
+          </article>
+
+          <article class="panel network-panel">
+            <div class="panel-heading">
+              <div>
+                <h3>Example layout</h3>
+                <p>A sketch of places, not a street map</p>
+              </div>
+              <button type="button" class="text-button" data-goto="devices">See sensors</button>
+            </div>
+            <div class="site-map">
+              <div class="map-road road-one"></div>
+              <div class="map-road road-two"></div>
+              <div class="map-road road-three"></div>
+              <div class="map-building building-one">STUDY</div>
+              <div class="map-building building-two">GATE</div>
+              <div class="map-building building-three">TREES</div>
+              <span class="map-label">PATH</span>
+              <div id="map-pins"></div>
+              <span class="map-caption">Not a real map</span>
+            </div>
+            <div id="network-summary" class="network-summary"></div>
+          </article>
+
+          <article class="panel insight-panel">
+            <div class="panel-heading">
+              <div>
+                <h3>How to read this</h3>
+                <p>A few honest limits</p>
+              </div>
+              <span class="spark" aria-hidden="true">✧</span>
+            </div>
+            <div class="insight-feature">
+              <span>01</span>
+              <div>
+                <h4>This number is not decibels</h4>
+                <p>It comes from signal energy on a 0 to 1 scale. It is not a legal limit or a health measurement.</p>
+              </div>
+            </div>
+            <div class="insight-feature">
+              <span>02</span>
+              <div>
+                <h4>Simple methods can win</h4>
+                <p>The forecast is compared with “same as last time”, a short average, and a straight line. The closest one is shown.</p>
+              </div>
+            </div>
+            <button type="button" class="button full" data-goto="forecast">See the forecast <span aria-hidden="true">↗</span></button>
+          </article>
+        </div>
+
+        <article class="panel observations">
+          <div class="panel-heading">
+            <div>
+              <h3>Latest readings</h3>
+              <p>Sensor, time, level, label, and quality</p>
+            </div>
+            <span id="row-count" class="pill">0 readings</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sensor</th>
+                  <th>Time (UTC)</th>
+                  <th>Level (0–1)</th>
+                  <th>Label</th>
+                  <th>Quality</th>
+                </tr>
+              </thead>
+              <tbody id="observations-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="page-forecast" class="page">
+        <div class="panel studio-intro">
+          <span class="studio-icon" aria-hidden="true">⌁</span>
+          <div>
+            <h3>Six minutes ahead, checked against the past</h3>
+            <p>Choose one sensor. Each guess is checked only on earlier readings. A simple method is used when it fits better. Random Forest joins after 40 minutes in a row.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Short projection</h3>
+              <p id="forecast-note">Choose one sensor above.</p>
+            </div>
+            <button type="button" class="button secondary" id="forecast-refresh">Update forecast</button>
+          </div>
+          <div id="forecast-result" class="forecast-result"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>How the methods compared</h3>
+              <p>Lower average error means a closer fit to past readings</p>
+            </div>
+          </div>
+          <div id="forecast-metrics" class="comparison-grid"></div>
+        </div>
+      </section>
+
+      <section id="page-audio" class="page">
+        <div class="audio-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <h3>Choose a recording</h3>
+                <p>Waveform, frequencies, and a sound label</p>
+              </div>
+              <span class="pill" id="ai-status">Checking the AI…</span>
+            </div>
+            <label class="dropzone" id="dropzone">
+              <input id="audio-file" type="file" accept=".wav,audio/wav,audio/wave,audio/x-wav" aria-label="Choose a WAV file">
+              <svg class="logo upload-icon" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M7 16c0-6 4-10 9-10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M7 16c0 6 4 10 9 10" fill="none" stroke="#0B00CF" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M15 16h2l1.6-3.5 2.2 6 2-4.2 2.2 2.2L27 9" fill="none" stroke="#FF2D2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h3>Drop a WAV file here</h3>
+              <p>or press Enter to choose one</p>
+              <small>16-bit PCM · 8–96 kHz · 0.1–30 seconds · up to 6 MB</small>
+            </label>
+            <button type="button" id="sample-audio" class="button secondary full">Try a test tone</button>
+            <button type="button" id="listen-btn" class="button secondary full">Listen for 3 seconds</button>
+            <p class="listen-note" id="listen-status" role="status">The browser asks for the microphone only when you press Listen. It records about 3 seconds. The clip is analysed on this server and is not saved. You can choose a WAV file instead.</p>
+            <p class="audio-privacy">The audio is processed in memory on this server and then discarded. It is not saved, and it is not sent to another service.</p>
+          </article>
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <h3>What it might be</h3>
+                <p>A model on this server suggests labels. You can ignore them.</p>
+              </div>
+            </div>
+            <div id="classification-result" class="classification-result">
+              <div class="model-orb" aria-hidden="true">✧</div>
+              <h2>Ready when you are</h2>
+              <p>Choose a recording to see its shape and the closest sound labels.</p>
+            </div>
+          </article>
+        </div>
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>The shape of the sound</h3>
+              <p id="audio-detail">The waveform and frequencies will show up here.</p>
+            </div>
+          </div>
+          <div id="waveform-chart" class="waveform-chart empty">No audio yet</div>
+          <canvas id="spectrogram" height="180" aria-label="Frequency picture of the audio"></canvas>
+          <div id="audio-features" class="feature-grid"></div>
+        </article>
+      </section>
+
+      <section id="page-devices" class="page">
+        <div class="section-title">
+          <div>
+            <h3>Sensors</h3>
+            <p>Each one gets an ID and a one-time token.</p>
+          </div>
+          <button type="button" id="add-device" class="button">Register a sensor</button>
+        </div>
+        <div id="device-cards" class="device-grid"></div>
+        <article class="panel integration">
+          <h3>Connect a device</h3>
+          <p>The ESP32 sketch in this project can send readings here. Register a sensor, copy its one-time token, then put that token in the sketch with your Wi-Fi name and the server address.</p>
+          <div class="code-label">Where readings are sent</div>
+          <code>POST /api/observations · header X-Device-Token</code>
+          <p>Sending the same message twice is ignored. A bad token is rejected. Readings with a quality flag are left out of the forecast.</p>
+        </article>
+      </section>
+
+      <section id="page-alerts" class="page">
+        <div class="panel threshold-panel">
+          <div>
+            <h3>Your alert line</h3>
+            <p>This is a project setting between 0.10 and 1. It is not a legal noise limit or a health warning. It applies to new readings.</p>
+          </div>
+          <form id="threshold-form">
+            <label class="filter-label" for="threshold-input">Alert line
+              <input id="threshold-input" type="number" inputmode="decimal" min="0.1" max="1" step="0.01" value="0.72" required>
+            </label>
+            <button class="button" type="submit">Save</button>
+          </form>
+        </div>
+        <div id="alerts-list" class="alerts-list"></div>
+      </section>
+
+      <footer>
+        <span>Kaanam <span class="subtle">/ a walk through sound</span></span>
+        <span>Learning project · not a certified sound-level meter</span>
+        <a href="/docs" target="_blank" rel="noopener">API documentation</a>
+      </footer>
+    </div>
+  </main>
+
+  <nav class="mobile-nav" aria-label="Pages">
+    <button type="button" data-page="overview" class="active" aria-current="page"><span aria-hidden="true">01</span>Overview</button>
+    <button type="button" data-page="forecast"><span aria-hidden="true">02</span>Forecast</button>
+    <button type="button" data-page="audio"><span aria-hidden="true">03</span>Sound lab</button>
+    <button type="button" data-page="devices"><span aria-hidden="true">04</span>Sensors</button>
+    <button type="button" data-page="alerts"><span aria-hidden="true">05</span>Alerts <b class="alert-count">0</b></button>
+  </nav>
+
+  <div id="toast" role="status"></div>
+
+  <dialog id="auth-dialog" aria-labelledby="auth-title">
+    <form id="auth-form">
+      <button type="button" class="dialog-close" data-close aria-label="Close">×</button>
+      <div class="eyebrow">Optional</div>
+      <h2 id="auth-title">Admin access</h2>
+      <p>Paste the token from <code>data/admin-token.txt</code> on the server, or the <code>KAANAM_ADMIN_TOKEN</code> you set. It stays in this browser tab only. Close this box to keep looking around without admin tools.</p>
+      <input id="admin-token" type="password" placeholder="Admin token" required autocomplete="off">
+      <button class="button full" type="submit">Unlock admin tools</button>
+    </form>
+  </dialog>
+
+  <dialog id="device-dialog" aria-labelledby="device-title">
+    <form id="device-form">
+      <button type="button" class="dialog-close" data-close aria-label="Close">×</button>
+      <div class="eyebrow">Sensors</div>
+      <h2 id="device-title">Register a sensor</h2>
+      <label>Sensor ID
+        <input name="id" placeholder="node_01" pattern="[a-zA-Z0-9_-]{3,48}" required spellcheck="false" autocapitalize="none" autocomplete="off">
+        <small>3–48 characters: letters, numbers, _ or -.</small>
+      </label>
+      <label>Name
+        <input name="name" placeholder="Front gate" maxlength="80" required>
+      </label>
+      <label>Place
+        <input name="location" placeholder="Campus gate" maxlength="100" required>
+      </label>
+      <button class="button full" type="submit">Create sensor</button>
+    </form>
+    <div id="device-token-result" hidden></div>
+  </dialog>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "kaanam-noise-intelligence",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "python preview.py",
+    "dashboard": "npm run dev --prefix web"
+  }
+}

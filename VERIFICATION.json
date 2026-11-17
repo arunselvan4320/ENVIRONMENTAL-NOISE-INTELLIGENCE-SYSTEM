@@ -1,0 +1,43 @@
+{
+  "integration_tests": "9 passed in both lightweight and AI-enabled runtimes",
+  "javascript_syntax": "passed",
+  "python_compilation": "passed",
+  "browser_checks": [
+    "overview renders",
+    "device filter",
+    "forecast results",
+    "test-tone WAV analysis",
+    "hardware empty state"
+  ],
+  "ml_pipeline": "synthetic-fixture training and inference smoke check passed; no field scores",
+  "not_verified": [
+    "ESP32 compilation and physical circuit",
+    "reference calibration",
+    "real-dataset classification performance",
+    "Windows/macOS launchers",
+    "Docker build"
+  ],
+  "versions": {
+    "fastapi": "0.141.1",
+    "uvicorn": "0.52.1",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "scikit-learn": "1.8.0",
+    "joblib": "1.5.3",
+    "python-multipart": "0.0.32",
+    "httpx": "0.28.1",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.57.6",
+    "safetensors": "0.8.0"
+  },
+  "pretrained_ai": {
+    "model": "MIT/ast-finetuned-audioset-10-10-0.4593",
+    "revision": "f826b80d28226b62986cc218e5cec390b1096902",
+    "real_inference": "passed: generated sine tone top label Sine wave",
+    "browser": "AI ready indicator and candidate score bars verified",
+    "weights_in_source_zip": false,
+    "field_accuracy": "not evaluated"
+  },
+  "forecasting_ai": "Random Forest included in causal baseline comparison; integration tests passed",
+  "device_audio": "real authenticated HTTP API, AST forward pass and dashboard label persistence verified using synthetic tone. Physical ESP32 untested."
+}

@@ -1,0 +1,53 @@
+Test ID,Component,Test Scenario,Expected Result,Actual Result,Status,Evidence
+TC-API-01,API,GET /api/health,HTTP 200 and status ok,HTTP 200; body starts with status ok and names the Audio Spectrogram Transformer,PASS,qa/QA_Test_Report.md section Evidence log; command on 17 Nov 2026 UTC
+TC-API-02,API,Forecast with device_id=all,HTTP 422 and a message to select one device,HTTP 422; detail Select one device for forecasting.,PASS,Same evidence log
+TC-API-03,API,Practice overview for the last 6 hours,HTTP 200 and a non-empty practice series after clock alignment,HTTP 200; total 1056; current 0.4889; newest 2026-11-17T13:46:00+00:00; calibration synthetic,PASS,qa/measure_qa_results.json overview_6h
+TC-API-04,API,CSV export for one practice sensor and 6 hours,HTTP 200 and a header that names the unitless index,HTTP 200; header source device_id timestamp_utc level_index_unitless sound_label quality_flags calibration_version,PASS,qa/measure_qa_results.json export_without_token
+TC-API-05,API,Observation level above 1,HTTP 422,HTTP 422,PASS,python -m unittest discover -s tests -v; test_invalid_measurements; 9 tests OK in 23.234s
+TC-API-06,API,Timestamp with no timezone,HTTP 422,HTTP 422,PASS,test_invalid_measurements
+TC-API-07,API,Timestamp more than five minutes ahead,HTTP 422,HTTP 422,PASS,test_invalid_measurements
+TC-API-08,API,Timestamp more than 48 hours old,HTTP 422,HTTP 422,PASS,test_invalid_measurements
+TC-API-09,API,OpenAPI document at /docs,HTTP 200 and the route list,Not executed in this run,NOT RUN,No command was run against /docs
+TC-API-10,API,Admin demo tick adds a practice row,HTTP 200 and one new synthetic row,Not executed; it would write the live database,NOT RUN,No command was run
+TC-AUTH-01,Authentication,Register a device with no admin token,HTTP 401,HTTP 401,PASS,test_auth
+TC-AUTH-02,Authentication,Register a device with a wrong-length admin token,HTTP 401,HTTP 401,PASS,test_auth
+TC-AUTH-03,Authentication,Post an observation with no device token,HTTP 401,HTTP 401,PASS,test_auth
+TC-AUTH-04,Authentication,Post an observation with the device token,HTTP 201,HTTP 201,PASS,test_auth
+TC-AUTH-05,Authentication,Acknowledge an alert with no admin token,HTTP 401,HTTP 401,PASS,test_dedup_and_ack
+TC-AUTH-06,Authentication,Acknowledge an alert with the admin token,HTTP 200,HTTP 200,PASS,test_dedup_and_ack
+TC-AUTH-07,Authentication,Viewer without a token is refused on CSV download,Not specified for this local build; no acceptance test was executed,Not executed as an acceptance test. A separate observation recorded HTTP 200,NOT RUN,See DEF-006 and qa/measure_qa_results.json export_without_token
+TC-DB-01,Database,Repeat the same device and message identity,HTTP 200 and the original row id,HTTP 201 then HTTP 200; same id; duplicate true,PASS,test_dedup_and_ack
+TC-DB-02,Database,A clipping flag is stored and kept out of the valid count and alerts,valid 0; flagged 1; no alert,valid 0; flagged 1; alerts empty,PASS,test_quality
+TC-DB-03,Database,Practice overview is separate from live overview,Demo source has rows; live recent rows are not synthetic,Assertions passed,PASS,test_demo_separation
+TC-DB-04,Database,Practice rows remain inside the default 6-hour view,Newest practice timestamp is inside the last 6 hours,total 1056; newest 2026-11-17T13:46:00+00:00; calibration synthetic,PASS,qa/measure_qa_results.json overview_6h
+TC-DB-05,Database,A stored time without a timezone does not crash device list or forecast,HTTP 200,HTTP 200,PASS,test_forecast
+TC-DB-06,Database,Two identical posts at the same moment keep one row,One row and no HTTP 500,Not executed in this run,NOT RUN,No concurrent command was run
+TC-AUD-01,Audio analysis,1 kHz 16-bit WAV feature centroid,Centroid near 1000 Hz and a spectrogram is returned,Assertions passed; HTTP 200,PASS,test_audio
+TC-AUD-02,Audio analysis,Body that is not a WAV,HTTP 422,HTTP 422,PASS,test_audio
+TC-AUD-03,Audio analysis,Device clip without a token then a repeated clip,HTTP 401; then a stored label; second call duplicate. Recognition is a test double,Assertions passed,PASS,test_ai_status_and_device_audio
+TC-AUD-04,Audio analysis,Live server analyses a 1-second 1 kHz tone,HTTP 200 and available true with a label,HTTP 200; label Beep bleep; available true; confidence 0.7578453421592712; elapsed 33959.9 ms including first load,PASS,qa/measure_qa_results.json warmup_audio
+TC-AUD-05,Audio analysis,Top score below 0.35 returns Unknown / uncertain,Label is Unknown / uncertain and no class is forced,Label Unknown / uncertain; confidence below 0.35; probabilities present; available true,PASS,test_uncertain_when_top_score_is_low in the 12-test unittest run
+TC-AUD-06,Audio analysis,Missing weights return an unavailable state,Label is not invented; available false,available false; confidence null; probabilities empty; label AI model not installed,PASS,test_missing_weights_are_unavailable used an empty temporary model directory
+TC-AUD-07,Audio analysis,Optional joblib file replaces the transformer,The result says the optional classifier is in use,Note contains Optional local classifier; model_version qa-optional,PASS,test_optional_classifier_replaces_transformer used a temporary joblib file
+TC-FCT-01,Forecasting,Practice road sensor with a long minute history,available true; 6 points; 4 methods,Assertions passed,PASS,test_forecast
+TC-FCT-02,Forecasting,Fewer than 12 one-minute bins,available false,Assertions passed on a 5-point series,PASS,test_forecast calling forecast([0.1] * 5)
+TC-FCT-03,Forecasting,Random Forest is omitted below 40 bins,Only the three baselines are returned,20-point series available; methods Persistence Moving average and Linear trend; ai_evaluated false,PASS,test_forecast calling forecast of 20 values of 0.2
+TC-FCT-04,Forecasting,Forecast request after a bad stored timestamp,HTTP 200,HTTP 200,PASS,test_forecast
+TC-FCT-05,Forecasting,Multi-horizon scores on the synthetic road series,24 rows; 4 methods; horizons 1-6; 20 shared origins,24 rows written; 361 minute means; 20 origins,PASS,qa/measure_qa.py; qa/measure_qa_results.json forecast
+TC-FE-01,Frontend,Server page at port 8000,HTTP 200 and the page contains Kaanam,HTTP 200; Kaanam present,PASS,test_frontend_export and the evidence-log GET /
+TC-FE-02,Frontend,Server page points to the sensor console,Page text contains 127.0.0.1:3000,HTTP 200; that address is present,PASS,Evidence-log GET http://127.0.0.1:8000/
+TC-FE-03,Frontend,Console page at port 3000,HTTP 200,HTTP 200; 38861 bytes,PASS,Evidence-log GET http://127.0.0.1:3000/
+TC-FE-04,Frontend,Browser shows the unitless-index title and the practice-seed caption,Those words are visible on the overview,Headless Edge waited for Unitless index over time and the practice-seed sentence,PASS,qa/e2e_console.py printed TC-FE-04 PASS
+TC-FE-05,Frontend,Console stylesheet from the server page,HTTP 200 for /assets/style.css,HTTP 200,PASS,test_frontend_export
+TC-E2E-01,End-to-end,Console page and its API proxy,Both return HTTP 200,Page HTTP 200; proxy /api/health HTTP 200,PASS,Evidence log
+TC-E2E-02,End-to-end,Operator switches practice and live and marks an alert seen in the browser,Screen state matches the filter and the alert shows Seen,Live view showed the empty-range sentence; practice view restored the seed caption; the QA sensor card then showed Seen,PASS,qa/e2e_console.py printed TC-E2E-02-switch PASS and TC-E2E-02-ack PASS
+TC-E2E-03,End-to-end,Operator chooses a WAV in the sound lab screen,The screen shows a scored label,Headless Edge set a 1-second WAV and waited for Score from 0 to 1,PASS,qa/e2e_console.py printed TC-E2E-03 PASS. That sentence renders only after a classification with scores
+TC-E2E-04,End-to-end,Operator registers a sensor from the fleet screen,A one-time device token is shown,The token text was longer than 20 characters and the sensor was deleted after the run,PASS,qa/e2e_console.py printed TC-E2E-04 PASS. Cleanup left 0 rows for qa-e2e-node
+TC-PERF-01,Performance,GET /api/health sequential,p95 at or below 250 ms and error rate 0,30 requests; p50 3.8 ms; p95 13.4 ms; error rate 0,PASS,qa/measure_qa_results.json; targets printed before the timed loop
+TC-PERF-02,Performance,GET /api/devices sequential,p95 at or below 250 ms and error rate 0,30 requests; p50 11.2 ms; p95 21.7 ms; error rate 0,PASS,qa/measure_qa_results.json
+TC-PERF-03,Performance,GET /api/overview practice 6h sequential,p95 at or below 800 ms and error rate 0,20 requests; p50 39.4 ms; p95 47.8 ms; error rate 0,PASS,qa/measure_qa_results.json
+TC-PERF-04,Performance,GET /api/forecast demo-road sequential,p95 at or below 8000 ms and error rate 0,8 requests; p50 2162.4 ms; p95 2380.3 ms; error rate 0,PASS,qa/measure_qa_results.json
+TC-PERF-05,Performance,Warmed POST /api/audio/analyse of a 1-second tone,p95 at or below 20000 ms and error rate 0. First load excluded,3 requests; p50 6530.6 ms; p95 6573.2 ms; error rate 0. Warmup 33959.9 ms excluded,PASS,qa/measure_qa_results.json
+TC-HW-01,Hardware,Compile and flash the ESP32 sketch,Sketch compiles on Arduino-ESP32 2.x,No board was connected,BLOCKED,User stated no hardware is connected
+TC-HW-02,Hardware,Board posts an observation that appears under live sensors,Live overview gains a row with calibration unvalidated,No board was connected,BLOCKED,User stated no hardware is connected
+TC-HW-03,Hardware,Wi-Fi drop retains the RAM queue and power loss clears it,Retries create one row per message id; power loss drops the queue,No board was connected,BLOCKED,User stated no hardware is connected
