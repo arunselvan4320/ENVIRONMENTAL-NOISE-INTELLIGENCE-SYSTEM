@@ -175,7 +175,7 @@ Source=Literal['demo','live']
 @app.get('/api/overview')
 def overview(device_id:str='all',source:Source='demo',hours:int=Query(6,ge=1,le=168)):
     rows=select_rows(device_id,source,hours);valid=[r for r in rows if not r['flags']]
-    with db() as c:threshold=c.execute('SELECT threshold FROM settings').fetchone()[0]
+    with db() as c:threshold=c.execute('SELECT threshold FROM settings').fetchone()['threshold']
     groups={};classes={}
     for r in rows:
         minute=r['timestamp'][:16]
