@@ -1,6 +1,8 @@
 import io,os,tempfile,unittest,wave
 from pathlib import Path
 from datetime import datetime,timezone,timedelta
+os.environ.pop('DATABASE_URL', None)
+os.environ.pop('KAANAM_DATABASE_URL', None)
 os.environ['KAANAM_DATA_DIR']=tempfile.mkdtemp(prefix='kaanam-tests-')
 os.environ['KAANAM_ADMIN_TOKEN']='test-admin-token'
 os.environ['KAANAM_DEMO']='1'

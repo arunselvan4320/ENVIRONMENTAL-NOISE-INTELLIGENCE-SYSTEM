@@ -1,5 +1,5 @@
-import csv, hashlib, io, json, math, os, secrets, sqlite3, threading
-from contextlib import contextmanager, asynccontextmanager
+import csv, hashlib, io, json, math, os, secrets, threading
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ConfigDict
 from .analytics import audio_features, classify, forecast
 from .pretrained import status as ai_status, recognise
+from .store import db as open_db, init_schema, is_duplicate
 from starlette.concurrency import run_in_threadpool
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -26,6 +27,7 @@ def load_admin():
     if path.is_file():
         saved=path.read_text(encoding='utf-8').strip()
         if saved:return saved
+    print('KAANAM_ADMIN_TOKEN is unset, so a new admin token was saved on this machine. Set that variable on a public host so the token survives a restart.')
     generated=secrets.token_urlsafe(32)
     path.write_text(generated,encoding='utf-8')
     try: path.chmod(0o600)
@@ -43,26 +45,11 @@ def parse_time(value):
     if parsed.tzinfo is None:parsed=parsed.replace(tzinfo=timezone.utc)
     return parsed
 def digest(t):return hashlib.sha256(t.encode()).hexdigest()
-@contextmanager
 def db():
-    c=sqlite3.connect(DB,timeout=15); c.row_factory=sqlite3.Row
-    c.execute('PRAGMA foreign_keys=ON')
-    try:yield c; c.commit()
-    except Exception:c.rollback(); raise
-    finally:c.close()
+    return open_db(DB)
 
 def init():
-    with db() as c:
-        c.executescript('''
-        PRAGMA journal_mode=WAL;
-        CREATE TABLE IF NOT EXISTS devices(id TEXT PRIMARY KEY,name TEXT NOT NULL,location TEXT NOT NULL,token_hash TEXT NOT NULL,firmware TEXT NOT NULL DEFAULT '1.0',calibration TEXT NOT NULL DEFAULT 'unvalidated',demo INTEGER NOT NULL DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS observations(id INTEGER PRIMARY KEY,device_id TEXT NOT NULL REFERENCES devices(id),message_id TEXT NOT NULL,timestamp TEXT NOT NULL,level REAL NOT NULL CHECK(level>=0 AND level<=1),label TEXT NOT NULL,flags TEXT NOT NULL,calibration TEXT NOT NULL,UNIQUE(device_id,message_id));
-        CREATE INDEX IF NOT EXISTS obs_time ON observations(timestamp);
-        CREATE TABLE IF NOT EXISTS alerts(id INTEGER PRIMARY KEY,observation_id INTEGER UNIQUE REFERENCES observations(id),device_id TEXT REFERENCES devices(id),timestamp TEXT NOT NULL,level REAL NOT NULL,acknowledged INTEGER NOT NULL DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS ai_events(observation_id INTEGER PRIMARY KEY REFERENCES observations(id),result TEXT NOT NULL,analysed_at TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS settings(id INTEGER PRIMARY KEY CHECK(id=1),threshold REAL NOT NULL DEFAULT .72);
-        INSERT OR IGNORE INTO settings(id) VALUES(1);
-        ''')
+    init_schema(DB)
     if DEMO:seed_demo();align_demo_clock()
 
 def seed_demo():
@@ -139,7 +126,7 @@ def admin_check():return {'ok':True}
 @app.get('/api/devices')
 def devices():
     with db() as c:
-        rows=c.execute('SELECT d.id,d.name,d.location,d.firmware,d.calibration,d.demo,MAX(o.timestamp) AS last_seen,COUNT(o.id) AS readings FROM devices d LEFT JOIN observations o ON d.id=o.device_id GROUP BY d.id').fetchall()
+        rows=c.execute('SELECT d.id,d.name,d.location,d.firmware,d.calibration,d.demo,MAX(o.timestamp) AS last_seen,COUNT(o.id) AS readings FROM devices d LEFT JOIN observations o ON d.id=o.device_id GROUP BY d.id,d.name,d.location,d.firmware,d.calibration,d.demo').fetchall()
     def status(row):
         if row['demo']:return 'demo'
         if not row['last_seen']:return 'offline'
@@ -152,7 +139,9 @@ def create_device(d:DeviceIn):
     token=secrets.token_urlsafe(32)
     try:
         with db() as c:c.execute('INSERT INTO devices(id,name,location,token_hash) VALUES(?,?,?,?)',(d.id,d.name,d.location,digest(token)))
-    except sqlite3.IntegrityError:raise HTTPException(409,'Device ID already exists.')
+    except Exception as error:
+        if not is_duplicate(error):raise
+        raise HTTPException(409,'Device ID already exists.')
     return dict(id=d.id,device_token=token,note='Copy now; this token is only shown once.')
 @app.post('/api/observations',status_code=201)
 def ingest(o:ObservationIn,x_device_token:str=Header(default='')):
@@ -240,7 +229,7 @@ def tick():
         for d in c.execute('SELECT id FROM devices WHERE demo=1').fetchall():
             last_row=c.execute('SELECT level FROM observations WHERE device_id=? ORDER BY timestamp DESC LIMIT 1',(d['id'],)).fetchone()
             if not last_row:continue
-            last=last_row[0]
+            last=last_row['level']
             value=round(max(.05,min(.98,last+(secrets.randbelow(101)-50)/1000)),4)
             cur=c.execute('INSERT INTO observations(device_id,message_id,timestamp,level,label,flags,calibration) VALUES(?,?,?,?,?,?,?)',(d['id'],secrets.token_hex(8),stamp(),value,'Synthetic event','[]','synthetic'))
             if value>=threshold:c.execute('INSERT INTO alerts(observation_id,device_id,timestamp,level) VALUES(?,?,?,?)',(cur.lastrowid,d['id'],stamp(),value))

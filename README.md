@@ -99,42 +99,25 @@ Set Wi-Fi credentials, registered device ID/token, HTTPS endpoints and the trust
 
 The microphone index is defined as `min(1, 8 * RMS(normalised_PCM))`. It is **not dB SPL or LAeq**. Microphone gain, clipping, calibration, reference comparison and A-weighting are not solved by adding AI. Digital dBFS in Sound lab is different from SPL.
 
-## Deploy to your domain (Render example)
+## Public free hosting
 
-Push the source to a private Git repository; do not commit tokens, data or downloaded weights. Create a Python web service, use Python 3.11/3.12, and configure:
+The console, the API, and the practice database can go online on the free plans. The 330 MB sound-model file stays on your computer: a free Render instance does not have room for PyTorch and those weights. Forecasts still run. Sound lab reports that the model is not installed until you use a larger host.
 
-Build command (Linux CPU):
+1. Supabase: create a project and copy the Postgres connection string (the pooler URI is fine). The API creates its tables on startup. Free projects can pause after a week without use.
+2. Render: create a Blueprint from this repository, or a Python web service with root `render.yaml`. Set `DATABASE_URL` to the Supabase string and `KAANAM_ADMIN_TOKEN` to a long secret you keep. The free service sleeps after 15 minutes, so the first visit after that can take half a minute. Health check: `/api/health`.
+3. Vercel: import this repository, set the root directory to `web`, and set `KAANAM_API_ORIGIN` to the Render address with no trailing slash, for example `https://kaanam-api.onrender.com`. Vercel gives a free `*.vercel.app` address. Redeploy the console after the API address exists, because that address is read when the console is built.
 
-```bash
-pip install 'torch>=2.6,<3' --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements-ai.txt && python -m ml.setup_pretrained
-```
+Do not commit `data/admin-token.txt`, `data/noise.db`, or `models/ast/`. On your own machine the API still uses SQLite when `DATABASE_URL` is unset.
 
-Start command:
+A paid host that can hold the sound model can still use the Dockerfile, which installs PyTorch and downloads the weights during the image build. That path was not run in this delivery.
 
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1
-```
-
-Health-check path: `/api/health`. Environment:
-
-```text
-KAANAM_DEMO=0
-KAANAM_DATA_DIR=/var/data
-KAANAM_ADMIN_TOKEN=<your-long-random-secret>
-KAANAM_AI_THREADS=2
-```
-
-Attach a persistent disk mounted at `/var/data` for SQLite. Do not set KAANAM_AST_MODEL_DIR to a runtime-only mounted disk while downloading at build time: that disk is not available during the build. The default downloads weights into the deployed application image. If you explicitly move weights onto a persistent disk, download them at runtime before starting the app instead.
-
-Use sufficient server memory for PyTorch, AST weights, inference tensors and concurrent requests; a minimal/free instance may not fit. Benchmark your chosen instance; no minimum-memory guarantee is claimed. Dockerfile now installs and verifies the pretrained model during build, but Docker itself was not built in this delivery.
-
-Add a custom domain in the host's dashboard, create the DNS record it provides and verify HTTPS. Set both ESP32 endpoints to that public domain. No inbound port forwarding on the ESP32's Wi-Fi router is required; the device initiates HTTPS requests.
-
-This remains a research prototype. Before a shared production deployment add viewer authentication, upload/request limits, retention cleanup, backups and operational monitoring. Read endpoints and the Sound lab upload API are currently unauthenticated. No domain was purchased or deployment performed in this update.
+This remains a research prototype. Read endpoints and the Sound lab upload are open. Add viewer authentication, upload limits, retention, and backups before treating it as a shared production service. No custom domain was purchased.
 
 ## Configuration
 
+- DATABASE_URL or KAANAM_DATABASE_URL: Supabase Postgres connection string. When unset, readings stay in SQLite.
 - KAANAM_DATA_DIR: SQLite and generated token folder, default data/.
+- KAANAM_API_ORIGIN: public API address used by the Next.js console. Local default is http://127.0.0.1:8000.
 - KAANAM_ADMIN_TOKEN: fixed administrator secret. If unset, the server reuses data/admin-token.txt and creates that file only when it is missing.
 - KAANAM_DEMO: 1 seeds demo data; 0 disables seeding/demo tick. Existing demo records are retained but separated.
 - KAANAM_AST_MODEL_DIR: local pretrained model directory, default models/ast/.
