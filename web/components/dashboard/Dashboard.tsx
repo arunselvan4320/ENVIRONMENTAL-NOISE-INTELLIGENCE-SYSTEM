@@ -95,9 +95,14 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-obsidian text-slate-100">
+    <div className="relative min-h-screen text-slate-100">
+      <div className="ambient" aria-hidden="true">
+        <span className="ambient-orb ambient-orb-a" />
+        <span className="ambient-orb ambient-orb-b" />
+        <span className="ambient-grid" />
+      </div>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:bg-white focus:px-3 focus:py-2 focus:text-slate-950">Skip to content</a>
-      <div className="flex min-h-screen">
+      <div className="relative z-10 flex min-h-screen">
         <Sidebar
           section={section}
           collapsed={collapsed}
@@ -121,7 +126,7 @@ export function Dashboard() {
           <main id="main-content" className="flex-1 p-3 md:p-5">
             {telemetry.error ? <p role="status" className="mb-3 rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{telemetry.error}</p> : null}
             {section === 'overview' ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
+              <div key="overview" className="console-stage grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
                 <Metric title="Current level" topic={`${topicBase}/current`} value={formatIndex(telemetry.overview?.current)} detail="Latest minute · not decibels" payload={metricPayload} connected={telemetry.isConnected} updated={received} status={linkStatus} className="xl:col-span-3" />
                 <Metric title="Average" topic={`${topicBase}/mean`} value={formatIndex(telemetry.overview?.mean)} detail="Valid readings only" payload={metricPayload} connected={telemetry.isConnected} updated={received} status={linkStatus} className="xl:col-span-3" />
                 <Metric title="Highest" topic={`${topicBase}/peak`} value={formatIndex(telemetry.overview?.peak)} detail="Highest valid reading" payload={metricPayload} connected={telemetry.isConnected} updated={received} status={linkStatus} className="xl:col-span-3" />
@@ -149,12 +154,12 @@ export function Dashboard() {
               </div>
             ) : null}
             {section === 'fleet' ? (
-              <TelemetryWidget title="Device fleet" topic="noise/devices" payload={envelope('noise/devices', telemetry.devices, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={linkStatus}>
+              <TelemetryWidget className="console-stage" title="Device fleet" topic="noise/devices" payload={envelope('noise/devices', telemetry.devices, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={linkStatus}>
                 <DeviceFleet devices={telemetry.devices} source={filters.source} adminToken={admin} onNeedAdmin={() => setAuthOpen(true)} onCreated={() => telemetry.refresh()} onError={(message) => report(message, true)} />
               </TelemetryWidget>
             ) : null}
             {section === 'stream' ? (
-              <div className="grid gap-3">
+              <div key="stream" className="console-stage grid gap-3">
                 <TelemetryWidget title="Live sound" topic="noise/audio/analyse" payload={envelope('noise/audio/analyse', telemetry.ai, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={telemetry.ai?.ready ? 'online' : 'warning'}>
                   <SoundLab adminToken={admin} ai={telemetry.ai} onPacket={telemetry.pushPacket} onError={(message) => report(message, true)} onDone={(message) => report(message)} />
                 </TelemetryWidget>
@@ -164,12 +169,12 @@ export function Dashboard() {
               </div>
             ) : null}
             {section === 'rules' ? (
-              <TelemetryWidget title="Alert rules" topic={`${topicBase}/alerts`} payload={envelope(`${topicBase}/alerts`, telemetry.alerts, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={openAlerts ? 'warning' : linkStatus}>
+              <TelemetryWidget className="console-stage" title="Alert rules" topic={`${topicBase}/alerts`} payload={envelope(`${topicBase}/alerts`, telemetry.alerts, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={openAlerts ? 'warning' : linkStatus}>
                 <RulesPanel alerts={telemetry.alerts} threshold={telemetry.overview?.threshold ?? 0.72} source={filters.source} adminToken={admin} onNeedAdmin={() => setAuthOpen(true)} onChanged={() => telemetry.refresh()} onError={(message) => report(message, true)} onMessage={(message) => report(message)} />
               </TelemetryWidget>
             ) : null}
             {section === 'settings' ? (
-              <TelemetryWidget title="Console settings" topic="noise/health" payload={envelope('noise/health', telemetry.health, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={linkStatus}>
+              <TelemetryWidget className="console-stage" title="Console settings" topic="noise/health" payload={envelope('noise/health', telemetry.health, received)} isConnected={telemetry.isConnected} lastUpdated={received} status={linkStatus}>
                 <SettingsPanel filters={filters} adminOn={Boolean(admin)} health={telemetry.health} onFilters={(next) => setFilters((current) => ({ ...current, ...next }))} onAdmin={() => setAuthOpen(true)} onTick={() => void tick()} />
               </TelemetryWidget>
             ) : null}
@@ -189,7 +194,7 @@ export function Dashboard() {
         </form>
       </Modal>
       {toast ? (
-        <div role="status" className={`fixed bottom-16 right-3 z-50 max-w-sm rounded border px-3 py-2 text-sm ${toast.error ? 'border-rose-500/50 bg-rose-950 text-rose-100' : 'border-line bg-widget text-slate-100'}`}>
+        <div role="status" className={`live-figure fixed bottom-16 right-3 z-50 max-w-sm rounded border px-3 py-2 text-sm ${toast.error ? 'border-rose-500/50 bg-rose-950 text-rose-100' : 'border-line bg-widget text-slate-100'}`}>
           {toast.text}
         </div>
       ) : null}
@@ -220,7 +225,7 @@ function Metric({
 }) {
   return (
     <TelemetryWidget title={title} topic={topic} payload={payload} isConnected={connected} lastUpdated={updated} status={status} className={className}>
-      <div className="font-mono text-3xl text-slate-50">{value}</div>
+      <div key={value} className="live-figure font-mono text-3xl text-slate-50">{value}</div>
       <p className="mt-1 text-xs text-slate-400">{detail}</p>
     </TelemetryWidget>
   )

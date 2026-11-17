@@ -43,7 +43,10 @@ export function Sidebar({
           </span>
           {collapsed ? null : (
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium">Kaanam <span lang="ta" className="text-slate-400">கானம்</span></div>
+              <div className="flex items-center gap-2">
+                <div className="truncate text-sm font-medium">Kaanam <span lang="ta" className="text-slate-400">கானம்</span></div>
+                <span className="eq" aria-hidden="true"><i /><i /><i /><i /></span>
+              </div>
               <div className="truncate font-mono text-[10px] text-slate-500">noise/console</div>
             </div>
           )}

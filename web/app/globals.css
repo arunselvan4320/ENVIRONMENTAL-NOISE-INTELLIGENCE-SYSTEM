@@ -13,9 +13,209 @@ body {
   color: #e5e7eb;
 }
 
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(48px);
+  opacity: 0.45;
+  animation: drift 22s ease-in-out infinite;
+}
+
+.ambient-orb-a {
+  top: -8rem;
+  left: 18%;
+  width: 28rem;
+  height: 28rem;
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.ambient-orb-b {
+  right: -6rem;
+  bottom: -8rem;
+  width: 32rem;
+  height: 32rem;
+  background: rgba(245, 158, 11, 0.12);
+  animation-delay: -8s;
+}
+
+.ambient-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+}
+
+.console-card {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.console-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08), 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.console-stage > * {
+  animation: rise-in 0.6s ease both;
+}
+
+.console-stage > *:nth-child(2) { animation-delay: 0.05s; }
+.console-stage > *:nth-child(3) { animation-delay: 0.1s; }
+.console-stage > *:nth-child(4) { animation-delay: 0.15s; }
+.console-stage > *:nth-child(5) { animation-delay: 0.2s; }
+.console-stage > *:nth-child(6) { animation-delay: 0.25s; }
+.console-stage > *:nth-child(7) { animation-delay: 0.3s; }
+.console-stage > *:nth-child(8) { animation-delay: 0.35s; }
+.console-stage > *:nth-child(9) { animation-delay: 0.4s; }
+
+.live-dot {
+  animation: pulse-dot 2.2s ease-out infinite;
+}
+
+.live-figure {
+  animation: figure-in 0.65s ease;
+}
+
+.eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.eq i {
+  display: block;
+  width: 2px;
+  height: 100%;
+  border-radius: 999px;
+  background: #34d399;
+  transform-origin: bottom;
+  animation: eq 1.15s ease-in-out infinite;
+}
+
+.eq i:nth-child(2) { animation-delay: 0.12s; }
+.eq i:nth-child(3) { animation-delay: 0.28s; }
+.eq i:nth-child(4) { animation-delay: 0.06s; }
+
+.level-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.5s ease forwards;
+}
+
+.level-fill {
+  opacity: 0;
+  animation: fade-in 1.2s ease 0.35s forwards;
+}
+
+.level-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: level-ping 2.2s ease-out infinite;
+}
+
+.threshold-line {
+  stroke-dasharray: 6 6;
+  animation: march 1.4s linear infinite;
+}
+
+.donut-in {
+  animation: rise-in 0.8s ease both;
+}
+
+.radar-sweep {
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 74%, rgba(16, 185, 129, 0.16) 88%, transparent 100%);
+  animation: sweep 9s linear infinite;
+}
+
+.pin-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  animation: pin-ring 2.6s ease-out infinite;
+}
+
+.forecast-card {
+  animation: rise-in 0.5s ease both;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(3%, -4%, 0) scale(1.08); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes figure-in {
+  from { opacity: 0.25; filter: blur(3px); }
+  to { opacity: 1; filter: none; }
+}
+
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-in {
+  to { opacity: 1; }
+}
+
+@keyframes level-ping {
+  0% { transform: scale(0.7); opacity: 0.75; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+@keyframes march {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes sweep {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pin-ring {
+  0% { transform: scale(0.65); opacity: 0.8; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  .level-line {
+    stroke-dashoffset: 0 !important;
+  }
+
+  .level-fill {
+    opacity: 1 !important;
   }
 }

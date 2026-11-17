@@ -12,7 +12,7 @@ export function ForecastPanel({ forecast }: { forecast: ForecastSnapshot }) {
       {forecast.available && forecast.points ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {forecast.points.map((point) => (
-            <div key={point.minutes} className="rounded border border-line bg-obsidian px-3 py-2">
+            <div key={point.minutes} className="forecast-card rounded border border-line bg-obsidian px-3 py-2" style={{ animationDelay: `${point.minutes * 40}ms` }}>
               <div className="font-mono text-[10px] text-slate-500">+{point.minutes} min</div>
               <div className="font-mono text-lg text-slate-100">{formatIndex(point.index)}</div>
             </div>

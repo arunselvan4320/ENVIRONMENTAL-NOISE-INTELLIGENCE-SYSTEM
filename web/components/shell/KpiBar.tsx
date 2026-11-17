@@ -31,7 +31,7 @@ export function KpiBar({
         <button type="button" className="rounded p-1 text-slate-200 md:hidden" aria-label="Open navigation" onClick={onMenu}>
           <Menu className="h-5 w-5" />
         </button>
-        <Kpi label="Link" value={isConnected ? 'UP' : 'DOWN'} tone={isConnected ? 'text-emerald-400' : 'text-rose-400'} />
+        <Kpi label="Link" value={isConnected ? 'UP' : 'DOWN'} tone={isConnected ? 'text-emerald-400' : 'text-rose-400'} live={isConnected} />
         <Kpi label="Updated" value={lastUpdated ? `${formatUtc(lastUpdated)} UTC` : '—'} />
         <Kpi label="Index" value={formatIndex(overview?.current)} />
         <Kpi label="Alerts" value={String(openAlerts)} tone={openAlerts ? 'text-amber-400' : 'text-slate-100'} />
@@ -57,11 +57,14 @@ export function KpiBar({
   )
 }
 
-function Kpi({ label, value, tone = 'text-slate-100' }: { label: string; value: string; tone?: string }) {
+function Kpi({ label, value, tone = 'text-slate-100', live = false }: { label: string; value: string; tone?: string; live?: boolean }) {
   return (
     <div className="min-w-0">
       <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`truncate font-mono text-sm ${tone}`}>{value}</div>
+      <div className={`flex items-center gap-1.5 truncate font-mono text-sm ${tone}`}>
+        {live ? <span className="live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" /> : null}
+        {value}
+      </div>
     </div>
   )
 }

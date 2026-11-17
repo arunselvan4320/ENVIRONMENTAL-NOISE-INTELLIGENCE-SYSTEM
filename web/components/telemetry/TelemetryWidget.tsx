@@ -36,11 +36,11 @@ export function TelemetryWidget({
   const [open, setOpen] = useState(false)
   const link: LinkState = status ?? (isConnected ? 'online' : 'offline')
   return (
-    <section className={cn('flex min-w-0 flex-col rounded-lg border border-line bg-widget', className)}>
+    <section className={cn('console-card flex min-w-0 flex-col rounded-lg border border-line bg-widget/95', className)}>
       <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className={cn('h-2 w-2 shrink-0 rounded-full', DOT[link])} aria-hidden="true" />
+            <span className={cn('h-2 w-2 shrink-0 rounded-full', DOT[link], link === 'online' && 'live-dot')} aria-hidden="true" />
             <h2 className="truncate text-sm font-medium text-slate-100">{title}</h2>
           </div>
           <p className="mt-1 truncate font-mono text-[11px] text-slate-400">{topic}</p>

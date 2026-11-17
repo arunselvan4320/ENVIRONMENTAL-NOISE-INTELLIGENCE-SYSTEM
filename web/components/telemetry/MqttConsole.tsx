@@ -33,7 +33,7 @@ export function MqttConsole({
           aria-expanded={open}
           className="inline-flex items-center gap-2 text-sm text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-200"
         >
-          <Radio className={isConnected ? 'h-4 w-4 text-emerald-500' : 'h-4 w-4 text-rose-500'} />
+          <Radio className={isConnected ? 'h-4 w-4 text-emerald-500 live-dot rounded-full' : 'h-4 w-4 text-rose-500'} />
           Live payload console
           <ChevronDown className={open ? 'h-4 w-4 rotate-180' : 'h-4 w-4'} />
         </button>

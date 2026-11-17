@@ -7,7 +7,7 @@ export function LabelMix({ classes, note }: { classes: { label: string; count: n
   return (
     <div>
       <div className="relative mx-auto h-40 w-40">
-        <svg viewBox="0 0 160 160" role="img" aria-label="Share of sound labels" className="h-full w-full -rotate-90">
+        <svg viewBox="0 0 160 160" role="img" aria-label="Share of sound labels" className="donut-in h-full w-full -rotate-90">
           <circle cx="80" cy="80" r="58" fill="none" stroke="#1F2937" strokeWidth="14" />
           {total ? classes.map((item, index) => {
             const length = (item.count / total) * ring
