@@ -60,7 +60,7 @@ def seed_demo():
     with db() as c:
         if c.execute("SELECT 1 FROM devices WHERE demo=1").fetchone():return
         row = c.execute('SELECT threshold FROM settings WHERE id = 1').fetchone()
-         threshold = row["threshold"] if hasattr(row, "keys") else row[0]
+threshold = row["threshold"] if hasattr(row, "keys") else row[0]
         for did,name,location,base in devices:
             c.execute('INSERT INTO devices(id,name,location,token_hash,demo) VALUES(?,?,?,?,1)',(did,name,location,digest(secrets.token_urlsafe(32))))
             for i in range(361):
